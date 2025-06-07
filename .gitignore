@@ -40,3 +40,7 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
+# Firebase service account keys (contains sensitive credentials)
+scripts/firebase-service-account-key.json
+**/firebase-service-account-key.json
+
