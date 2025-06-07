@@ -1,65 +1,21 @@
 import { NextRequest, NextResponse } from "next/server";
-import admin from "firebase-admin";
-import { getAuth } from "firebase-admin/auth";
-import { getFirestore } from "firebase-admin/firestore";
-import fs from "fs";
-import path from "path";
-
-// Initialize Firebase Admin if not already initialized
-if (!admin.apps.length) {
-  const serviceAccountPath = path.join(
-    process.cwd(),
-    "scripts",
-    "firebase-service-account-key.json"
-  );
-  const serviceAccount = JSON.parse(
-    fs.readFileSync(serviceAccountPath, "utf8")
-  );
-
-  admin.initializeApp({
-    credential: admin.credential.cert(serviceAccount),
-    projectId: serviceAccount.project_id,
-  });
-}
-
-const auth = getAuth();
-const db = getFirestore();
+import { verifyAdminAccess, getFirebaseFirestore } from "@/lib/firebase-admin";
 
 export async function DELETE(request: NextRequest) {
   try {
-    // Verify that the request is from an authenticated admin
+    // Verify admin access using the centralized utility
     const authHeader = request.headers.get("authorization");
-    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    const adminCheck = await verifyAdminAccess(authHeader);
+
+    if (!adminCheck.success) {
       return NextResponse.json(
-        { error: "Unauthorized - Missing token" },
-        { status: 401 }
+        { error: adminCheck.error },
+        { status: adminCheck.error?.includes("Unauthorized") ? 401 : 403 }
       );
     }
 
-    const idToken = authHeader.split("Bearer ")[1];
-
-    // Verify the ID token and check if user is admin
-    let decodedToken;
-    try {
-      decodedToken = await auth.verifyIdToken(idToken);
-    } catch {
-      return NextResponse.json(
-        { error: "Unauthorized - Invalid token" },
-        { status: 401 }
-      );
-    }
-
-    // Check if the user is an admin
-    const adminUserDoc = await db
-      .collection("users")
-      .doc(decodedToken.uid)
-      .get();
-    if (!adminUserDoc.exists || adminUserDoc.data()?.role !== "admin") {
-      return NextResponse.json(
-        { error: "Forbidden - Admin access required" },
-        { status: 403 }
-      );
-    }
+    // Get Firestore instance
+    const db = getFirebaseFirestore();
 
     // Parse request body
     const { donationId } = await request.json();
