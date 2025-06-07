@@ -114,7 +114,7 @@ export function AdminTable() {
     // Prepare data for export (excluding Status and Actions)
     const exportData = donations.map((donation) => ({
       "Donor Name": donation.name,
-      Amount: `$${donation.amount.toFixed(2)}`,
+      Amount: `Rs.${donation.amount.toFixed(2)}`,
       Comment: donation.comment || "-",
       Date: formatDate(donation.timestamp),
     }));
@@ -172,7 +172,7 @@ export function AdminTable() {
               <TableRow key={donation.id}>
                 <TableCell className="font-medium">{donation.name}</TableCell>
                 <TableCell className="text-green-600 font-semibold">
-                  ${donation.amount.toFixed(2)}
+                  Rs.{donation.amount.toFixed(2)}
                 </TableCell>
                 <TableCell className="max-w-xs truncate">
                   {donation.comment || "-"}
@@ -205,7 +205,7 @@ export function AdminTable() {
                           <span className="font-medium">{donation.name}</span>{" "}
                           for{" "}
                           <span className="font-medium">
-                            ${donation.amount.toFixed(2)}
+                            Rs.{donation.amount.toFixed(2)}
                           </span>
                           ? This action cannot be undone.
                         </AlertDialogDescription>
