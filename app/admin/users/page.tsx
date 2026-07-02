@@ -42,6 +42,7 @@ import { Badge } from "@/components/ui/badge";
 
 interface UserData {
   uid: string;
+  name: string;
   email: string;
   role: "collector" | "admin";
   createdAt: string;
@@ -54,6 +55,7 @@ interface UserData {
 
 export default function UserManagementPage() {
   const { userData } = useAuth();
+  const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [role, setRole] = useState<"collector" | "admin">("collector");
@@ -62,6 +64,7 @@ export default function UserManagementPage() {
     type: "success" | "error";
     text: string;
   } | null>(null);
+  const [verificationLink, setVerificationLink] = useState<string | null>(null);
 
   // User management states
   const [users, setUsers] = useState<UserData[]>([]);
@@ -173,10 +176,11 @@ export default function UserManagementPage() {
     e.preventDefault();
     setLoading(true);
     setMessage(null);
+    setVerificationLink(null);
 
     try {
       // Validate inputs
-      if (!email || !password || !role) {
+      if (!name || !email || !password || !role) {
         throw new Error("All fields are required");
       }
 
@@ -198,6 +202,7 @@ export default function UserManagementPage() {
           Authorization: `Bearer ${idToken}`,
         },
         body: JSON.stringify({
+          name,
           email,
           password,
           role,
@@ -212,10 +217,16 @@ export default function UserManagementPage() {
 
       setMessage({
         type: "success",
-        text: data.message,
+        text: `User ${email} created successfully!`,
       });
 
+      // Store verification link if returned
+      if (data.verificationLink) {
+        setVerificationLink(data.verificationLink);
+      }
+
       // Reset form
+      setName("");
       setEmail("");
       setPassword("");
       setRole("collector");
@@ -293,6 +304,19 @@ export default function UserManagementPage() {
                   autoComplete="off"
                 >
                   <div className="space-y-2">
+                    <Label htmlFor="name">Full Name</Label>
+                    <Input
+                      id="name"
+                      type="text"
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                      placeholder="Enter user's full name"
+                      required
+                      autoComplete="off"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
                     <Label htmlFor="email">Email Address</Label>
                     <Input
                       id="email"
@@ -360,6 +384,36 @@ export default function UserManagementPage() {
                         {message.text}
                       </AlertDescription>
                     </Alert>
+                  )}
+
+                  {/* Verification Link Box */}
+                  {verificationLink && (
+                    <div className="p-4 bg-amber-50 border border-amber-200 rounded-lg space-y-2">
+                      <p className="text-sm font-semibold text-amber-800 flex items-center gap-2">
+                        📧 Email Verification Link
+                      </p>
+                      <p className="text-xs text-amber-700">
+                        Firebase does not send emails automatically. Copy this link and send it to the new user manually (via WhatsApp, email, etc.).
+                      </p>
+                      <div className="flex gap-2 items-center">
+                        <input
+                          readOnly
+                          value={verificationLink}
+                          className="flex-1 text-xs bg-white border border-amber-300 rounded px-2 py-1 text-gray-700 truncate"
+                        />
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="outline"
+                          className="shrink-0 border-amber-400 text-amber-800 hover:bg-amber-100"
+                          onClick={() => {
+                            navigator.clipboard.writeText(verificationLink);
+                          }}
+                        >
+                          Copy
+                        </Button>
+                      </div>
+                    </div>
                   )}
 
                   <Button type="submit" disabled={loading} className="w-full">
@@ -464,10 +518,10 @@ export default function UserManagementPage() {
                                 )}
                                 <div>
                                   <div className="font-medium">
-                                    {user.email}
+                                    {user.name || "—"}
                                   </div>
                                   <div className="text-xs text-gray-500">
-                                    {user.uid.substring(0, 8)}...
+                                    {user.email}
                                   </div>
                                 </div>
                               </div>

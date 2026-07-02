@@ -41,6 +41,12 @@ export function Navigation() {
                 >
                   User Management
                 </Link>
+                <Link
+                  href="/admin/view"
+                  className="text-gray-700 hover:text-blue-600"
+                >
+                  View Donations
+                </Link>
               </div>
             )}
           </div>
@@ -107,6 +113,13 @@ export function Navigation() {
                     onClick={() => setIsMobileMenuOpen(false)}
                   >
                     User Management
+                  </Link>
+                  <Link
+                    href="/admin/view"
+                    className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-blue-600 hover:bg-gray-50"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                  >
+                    View Donations
                   </Link>
                 </>
               )}
