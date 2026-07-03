@@ -23,10 +23,10 @@ export async function POST(request: NextRequest) {
     const db = getFirebaseFirestore();
 
     // Parse request body
-    const { email, password, role } = await request.json();
+    const { email, password, role, name } = await request.json();
 
     // Validate inputs
-    if (!email || !password || !role) {
+    if (!email || !password || !role || !name) {
       return NextResponse.json(
         { error: "All fields are required" },
         { status: 400 }
@@ -51,26 +51,44 @@ export async function POST(request: NextRequest) {
     const userRecord = await auth.createUser({
       email: email,
       password: password,
-      emailVerified: false, // You can set this to true if needed
+      displayName: name,
+      emailVerified: false,
     });
 
     // Create user document in Firestore
     await db.collection("users").doc(userRecord.uid).set({
       uid: userRecord.uid,
+      name: name,
       email: email,
       role: role,
       createdAt: new Date().toISOString(),
       createdBy: adminCheck.uid,
     });
 
+    // Generate email verification link
+    // Firebase Admin SDK does NOT send emails automatically — we must generate the link
+    let verificationLink: string | null = null;
+    try {
+      verificationLink = await auth.generateEmailVerificationLink(email);
+      console.log(`📧 Verification link generated for ${email} (link omitted from logs).`);
+    } catch (linkError) {
+      // Non-fatal: user is created, but verification link failed
+      console.warn("Could not generate verification link:", linkError);
+    }
+
     return NextResponse.json({
       success: true,
-      message: `Successfully created ${role} user: ${email}`,
+      message: `Successfully created ${role} user: ${email}. ${
+        verificationLink
+          ? "A verification link has been generated."
+          : "Could not generate verification link."
+      }`,
       user: {
         uid: userRecord.uid,
         email: email,
         role: role,
       },
+      verificationLink,
     });
   } catch (error: unknown) {
     console.error("Error creating user:", error);

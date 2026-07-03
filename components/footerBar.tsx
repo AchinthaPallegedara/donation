@@ -3,7 +3,7 @@ import React from "react";
 
 const footerBar = () => {
   return (
-    <div className="sticky z-50 bottom-0 left-0 h-15 border-2 w-full flex items-center justify-center">
+    <div className="sticky z-50 y-10 bottom-0 left-0 h-15 border-t border-gray-200 w-full flex items-center justify-center bg-white">
       <p className="text-sm text-gray-500">
         &copy; {new Date().getFullYear()} Design & Develop by{" "}
         <Link href={"https://claviq.com"}>

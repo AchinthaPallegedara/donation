@@ -32,6 +32,7 @@ export async function GET(request: NextRequest) {
       const data = doc.data();
       return {
         uid: data.uid,
+        name: data.name || "",
         email: data.email,
         role: data.role,
         createdAt: data.createdAt,
